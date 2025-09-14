@@ -55,6 +55,10 @@ class _MyHomePageState extends State<MyHomePage> {
                                                                                                                                             mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
             Text(
+              'lab1',
+              style: Theme.of(context).textTheme.headlineLarge,
+            ),
+            Text(
                 'сколько у тебя долгов?',
               style: Theme.of(context).textTheme.headlineSmall,
             ),
