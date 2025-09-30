@@ -13,6 +13,7 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'Flutter Demo',
+      debugShowCheckedModeBanner: false ,
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepOrangeAccent),
       ),
@@ -33,16 +34,7 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
-  int _counter = 0;
-  Color _color = Colors.deepOrange;
-
-  void _incrementCounter() {
-    setState(() {
-      _counter++;
-      _color=Color((Random().nextDouble() * 0xFFFFFF).toInt()).withOpacity(1.0);
-    });
-  }
-
+  final Color _color = Colors.blueAccent;
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -50,35 +42,17 @@ class _MyHomePageState extends State<MyHomePage> {
         backgroundColor: _color,
         title: Text(widget.title),
       ),
-      body: Center(
-        child: Column(
-                                                                                                                                            mainAxisAlignment: MainAxisAlignment.center,
-          children: <Widget>[
-            Text(
-              'lab1',
-              style: Theme.of(context).textTheme.headlineLarge,
-            ),
-            Text(
-                'сколько у тебя долгов?',
-              style: Theme.of(context).textTheme.headlineSmall,
-            ),
-            Text(
-              '$_counter',
-              style: Theme.of(context).textTheme.headlineMedium,
-            ),
-            if (_counter>10)
-              Text(
-                'УДАЧИ!)',
-                style: Theme.of(context).textTheme.headlineLarge,
-              )
-          ],
-        ),
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _incrementCounter,
-        backgroundColor: _color,
-        tooltip: 'Increment',
-        child: const Icon(Icons.ac_unit),
-      ),     );
+      body: MyWidget(),
+    );
   }
 }
+
+class MyWidget extends StatelessWidget {
+  const MyWidget({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return const Placeholder();
+  }
+}
+
