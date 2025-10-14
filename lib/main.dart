@@ -25,8 +25,8 @@ class MyApp extends StatelessWidget {
 class MyHomePage extends StatefulWidget {
   const MyHomePage({super.key, required this.title});
 
-      
-        
+
+
   final String title;
 
   @override
@@ -94,13 +94,13 @@ class _CardData{
 
   _CardData(
       this.text,{
-      required this.descriptionText,
-      this.icon = Icons.abc,
-      this.imageUrl,
-  });
+        required this.descriptionText,
+        this.icon = Icons.abc,
+        this.imageUrl,
+      });
 }
 
-class _Card extends StatelessWidget {
+class _Card extends StatefulWidget {
 
   final String text;
   final String descriptionText;
@@ -109,23 +109,28 @@ class _Card extends StatelessWidget {
 
   const _Card(
       this.text, {
-      this.icon = Icons.face,
-      required this.descriptionText,
-      this.imageUrl,
-  });
+        this.icon = Icons.face,
+        required this.descriptionText,
+        this.imageUrl,
+      });
 
   factory _Card.fromData(_CardData data) => _Card(
-      data.text,
-      descriptionText: data.descriptionText,
-      icon: data.icon,
-      imageUrl: data.imageUrl,
+    data.text,
+    descriptionText: data.descriptionText,
+    icon: data.icon,
+    imageUrl: data.imageUrl,
   );
 
+  @override
+  State<_Card> createState() => _CardState();
+}
+
+class _CardState extends State<_Card> {
+  bool isLiked = false;
   @override
   Widget build(BuildContext context) {
     return Container(
       margin: const EdgeInsets.all(16),
-      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(20),
         border: Border.all(
@@ -134,44 +139,77 @@ class _Card extends StatelessWidget {
         ),
         color: Colors.deepOrange,
       ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          ClipRRect(
-              borderRadius: BorderRadius.circular(20),
-              child: SizedBox(
-                height: 150,
-                width: 150,
-                child: Image.network(
-                imageUrl ?? "",
-                fit: BoxFit.cover,
-                errorBuilder: (_, __, ___) => const Placeholder(),
+      child: IntrinsicHeight(
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            ClipRRect(
+                borderRadius: BorderRadius.only(
+                    bottomLeft: Radius.circular(16),
+                    topLeft: Radius.circular(16)
+
                 ),
-              )
-          ),
-          Expanded(
-            child: Padding(
-              padding: const EdgeInsets.only(left: 16.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                      text,
+                child: SizedBox(
+                  height: double.infinity,
+                  width: 150,
+                  child: Image.network(
+                    widget.imageUrl ?? "",
+                    fit: BoxFit.cover,
+                    errorBuilder: (_, __, ___) => const Placeholder(),
+                  ),
+                )
+            ),
+            Expanded(
+              child: Padding(
+                padding: const EdgeInsets.only(left: 16.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      widget.text,
                       style: Theme.of(context).textTheme.headlineLarge,
-                  ),
-                  Text(
-                    descriptionText,
-                    style: Theme.of(context).textTheme.bodyLarge,
-                  ),
-                ],
+                    ),
+                    Text(
+                      widget.descriptionText,
+                      style: Theme.of(context).textTheme.bodyLarge,
+                    ),
+                  ],
+                ),
               ),
             ),
-          ),
-          Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: Icon(icon),
-          ),
-        ],
+            Align(
+              alignment: Alignment.bottomRight,
+              child: Padding(
+                padding: const EdgeInsets.only(
+                  left: 8.0,
+                  right: 16,
+                  bottom: 16,
+                ),
+                child: GestureDetector(
+                  onTap: () {
+                    setState(() {
+                      isLiked = !isLiked;
+                    });
+                  },
+                  child: AnimatedSwitcher(
+                    duration: const Duration(milliseconds: 200),
+                    child: isLiked
+                        ? const Icon(
+                        Icons.favorite,
+                        color: Colors.blue,
+                        key : ValueKey<int>(0)
+                    )
+                        : const Icon(
+                        Icons.favorite_border,
+                        key : ValueKey<int>(1)
+                    ),
+
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
