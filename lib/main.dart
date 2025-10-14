@@ -52,13 +52,126 @@ class MyWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+
+    final data = [
+      _CardData(
+          "text",
+          descriptionText: "descriptionText",
+          imageUrl: "https://i.pinimg.com/736x/1a/a4/8c/1aa48c0e918d8da9d90d26cc89914e2b.jpg"
+      ),
+
+      _CardData(
+          "text",
+          descriptionText: "descriptionText",
+          icon: Icons.account_box,
+          imageUrl: "https://i.pinimg.com/736x/56/0c/6f/560c6f7a19db891e243185fec48737e3.jpg"
+      ),
+
+      _CardData(
+          "text",
+          descriptionText: "descriptionText",
+          icon: Icons.account_box,
+          imageUrl: "https://i.pinimg.com/736x/a4/d4/05/a4d40513206a5e7785b97a8e067d2eb4.jpg"
+      )
+    ];
+
     return Center(
-      child: Container(
-        color: Colors.deepOrange,
-        child: Text(
-            'hello',
-            style: Theme.of(context).textTheme.headlineLarge,
+      child: SingleChildScrollView(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: data.map((e) => _Card.fromData(e)).toList(),
         ),
+      ),
+    );
+  }
+}
+
+class _CardData{
+  final String text;
+  final String descriptionText;
+  final IconData icon;
+  final String? imageUrl;
+
+  _CardData(
+      this.text,{
+      required this.descriptionText,
+      this.icon = Icons.abc,
+      this.imageUrl,
+  });
+}
+
+class _Card extends StatelessWidget {
+
+  final String text;
+  final String descriptionText;
+  final IconData icon;
+  final String? imageUrl;
+
+  const _Card(
+      this.text, {
+      this.icon = Icons.face,
+      required this.descriptionText,
+      this.imageUrl,
+  });
+
+  factory _Card.fromData(_CardData data) => _Card(
+      data.text,
+      descriptionText: data.descriptionText,
+      icon: data.icon,
+      imageUrl: data.imageUrl,
+  );
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      margin: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(
+          color: Colors.black,
+          width: 5,
+        ),
+        color: Colors.deepOrange,
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          ClipRRect(
+              borderRadius: BorderRadius.circular(20),
+              child: SizedBox(
+                height: 150,
+                width: 150,
+                child: Image.network(
+                imageUrl ?? "",
+                fit: BoxFit.cover,
+                errorBuilder: (_, __, ___) => const Placeholder(),
+                ),
+              )
+          ),
+          Expanded(
+            child: Padding(
+              padding: const EdgeInsets.only(left: 16.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                      text,
+                      style: Theme.of(context).textTheme.headlineLarge,
+                  ),
+                  Text(
+                    descriptionText,
+                    style: Theme.of(context).textTheme.bodyLarge,
+                  ),
+                ],
+              ),
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: Icon(icon),
+          ),
+        ],
       ),
     );
   }
