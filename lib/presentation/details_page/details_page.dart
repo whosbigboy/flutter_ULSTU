@@ -9,24 +9,24 @@ class DetailsPage extends StatelessWidget{
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(),
+      appBar: AppBar(
+        backgroundColor: Color.fromRGBO(26, 0, 137, 100),
+        title: Center(
+          child: Text(
+              data.text,
+              style: TextStyle(
+                fontSize: 30,
+                color: Colors.white,
+              ),
+          ),
+        ),
+      ),
       body: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Padding(
               padding: const EdgeInsets.only(bottom: 16),
               child: Image.network(data.imageUrl ?? '',),
-          ),
-          Center(
-            child: Padding(
-              padding: const EdgeInsets.only(bottom: 4.0),
-              child: Text(
-                data.text,
-                style: TextStyle(
-                  fontSize: 30,
-                )
-              ),
-            ),
           ),
           Center(
             child: Text(

@@ -108,7 +108,7 @@ class _CardState extends State<_Card> {
                       Text(
                         widget.text,
                         style: TextStyle(
-                            fontSize: 32,
+                            fontSize: 25,
                             fontWeight: FontWeight.bold,
                             color: Colors.white
                         ),
