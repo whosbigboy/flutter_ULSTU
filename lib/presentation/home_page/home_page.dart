@@ -52,7 +52,7 @@ class Body extends StatelessWidget {
 
       CardData(
           "Akira",
-          descriptionText: "cool boy on the bike. and experiments on children in the neo-tokyo",
+          descriptionText: "cool boy on the bike. and experiments on children in neo-tokyo",
           icon: Icons.account_box,
           imageUrl: "https://i.pinimg.com/736x/3c/f3/da/3cf3da42abdef05e075cdebe52e48068.jpg"
       ),
@@ -98,9 +98,9 @@ class Body extends StatelessWidget {
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(
         content: Center(
           child: Text(
-            'goddam u ${isLiked ? "liked this $title" : "disliked this $title :("}',
+            'goddam u ${isLiked ? "liked $title" : "disliked $title :("}',
             style: TextStyle(
-              fontSize: 18,
+              fontSize: 17,
               color: Colors.white,
             ),
           ),
