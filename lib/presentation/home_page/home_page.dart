@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
+import 'package:flutter_app/data/repositories/mock_repository.dart';
+import 'package:flutter_app/domain/models/card.dart';
 
 import 'package:flutter_app/presentation/details_page/details_page.dart';
-part '../../domain/models/card.dart';
+
+import '../../data/repositories/anime_repository.dart';
 
 class MyHomePage extends StatefulWidget {
   const MyHomePage({super.key, required this.title});
@@ -18,14 +21,147 @@ class _MyHomePageState extends State<MyHomePage> {
     return Scaffold(
       appBar: AppBar(
         backgroundColor: darkblue,
-        title: Text(
-          widget.title,
-          style: TextStyle(
-            color: Colors.white,
+        title: Text(widget.title, style: TextStyle(color: Colors.white)),
+      ),
+      body: Body(),
+    );
+  }
+}
+
+
+class _Card extends StatefulWidget {
+  final String text;
+  final String descriptionText;
+  final IconData icon;
+  final String? imageUrl;
+  final OnLikeCallBack onLike;
+  final VoidCallback? onTap;
+
+  const _Card(
+      this.text, {
+        this.icon = Icons.face,
+        required this.descriptionText,
+        this.imageUrl,
+        this.onLike,
+        this.onTap,
+      });
+
+  factory _Card.fromData(
+      CardData data, {
+        OnLikeCallBack onLike,
+        VoidCallback? onTap,
+      }) => _Card(
+    data.text,
+    descriptionText: data.descriptionText,
+    icon: data.icon,
+    imageUrl: data.imageUrl,
+    onLike: onLike,
+    onTap: onTap,
+  );
+
+  @override
+  State<_Card> createState() => _CardState();
+}
+
+class _CardState extends State<_Card> {
+  bool isLiked = false;
+  final Color niceOrange = Color.fromRGBO(255, 94, 51, 100);
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: widget.onTap,
+      child: Container(
+        margin: const EdgeInsets.all(16),
+        constraints: const BoxConstraints(minHeight: 150),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(color: Colors.grey, width: 2),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.grey,
+              spreadRadius: 3,
+              offset: const Offset(0, 5),
+              blurRadius: 8,
+            ),
+          ],
+          color: niceOrange,
+        ),
+        child: IntrinsicHeight(
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              ClipRRect(
+                borderRadius: BorderRadius.only(
+                  bottomLeft: Radius.circular(16),
+                  topLeft: Radius.circular(16),
+                ),
+                child: SizedBox(
+                  height: double.infinity,
+                  width: 150,
+                  child: Image.network(
+                    widget.imageUrl ?? "",
+                    fit: BoxFit.cover,
+                    errorBuilder: (_, __, ___) => const Placeholder(),
+                  ),
+                ),
+              ),
+              Expanded(
+                child: Padding(
+                  padding: const EdgeInsets.only(left: 16.0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        widget.text,
+                        style: TextStyle(
+                          fontSize: 25,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                        ),
+                      ),
+                      Text(
+                        widget.descriptionText,
+                        style: TextStyle(fontSize: 18, color: Colors.white),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              Align(
+                alignment: Alignment.bottomRight,
+                child: Padding(
+                  padding: const EdgeInsets.only(
+                    left: 8.0,
+                    right: 16,
+                    bottom: 16,
+                  ),
+                  child: GestureDetector(
+                    onTap: () {
+                      setState(() {
+                        isLiked = !isLiked;
+                      });
+                      widget.onLike?.call(widget.text, isLiked);
+                    },
+                    child: AnimatedSwitcher(
+                      duration: const Duration(milliseconds: 200),
+                      child: isLiked
+                          ? const Icon(
+                        Icons.favorite,
+                        color: Color.fromRGBO(102, 2, 60, 100),
+                        key: ValueKey<int>(0),
+                      )
+                          : const Icon(
+                        Icons.favorite_outline,
+                        key: ValueKey<int>(1),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ],
           ),
         ),
       ),
-      body: Body(),
     );
   }
 }
@@ -35,83 +171,47 @@ class Body extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-
-    final data = [
-      CardData(
-          "Gurren Laggan",
-          descriptionText: "omg bro who the hell do u think Kanima and Simon are? Row row fight to power",
-          imageUrl: "https://i.pinimg.com/1200x/5f/f2/40/5ff240b0b79e342d1729a058190ad206.jpg"
-      ),
-
-      CardData(
-          "Cowboy Bebop",
-          descriptionText: "cowboys in the space? smth like that. if u wannna listen to space jazz, u r welcome",
-          icon: Icons.account_box,
-          imageUrl: "https://i.pinimg.com/1200x/ce/26/74/ce267476fbbe391d72f0c091c27c7071.jpg"
-      ),
-
-      CardData(
-          "Akira",
-          descriptionText: "cool boy on the bike. and experiments on children in neo-tokyo",
-          icon: Icons.account_box,
-          imageUrl: "https://i.pinimg.com/736x/3c/f3/da/3cf3da42abdef05e075cdebe52e48068.jpg"
-      ),
-
-      CardData(
-          "Neon Genesis Evangelion",
-          descriptionText: "hedgehog's dillema and many many many other problems",
-          imageUrl: "https://i.pinimg.com/736x/0d/ee/db/0deedb6bbbbd2b17b2ab4495ca02f9c2.jpg"
-      ),
-
-      CardData(
-          "Jojo's Bizarre Adventure",
-          descriptionText: "new season, new some jojo's relative",
-          imageUrl: "https://i.pinimg.com/1200x/3d/18/98/3d18985ce820ee790fbfeaf422a81e3c.jpg"
-      ),
-
-      CardData(
-          "Grand blue",
-          descriptionText: "men just chilling and vibing and drinking without sobering up and sometimes diving and rarely studying",
-          imageUrl: "https://i.pinimg.com/736x/e6/56/36/e65636fe7c241dcf163d16f3c574caad.jpg"
-      ),
-    ];
-
+    final data = AnimeRepository().loadData();
     return Center(
-      child: SingleChildScrollView(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: data.map((data) {
-            return _Card.fromData(
-              data,
-              onLike: (String title, bool isLiked)
-              => _showSnackBar(context, title, isLiked),
-              onTap: () => _navToDetails(context, data)
-            );
-          }).toList(),
+      child: FutureBuilder<List<CardData>?>(
+        future: data,
+        builder: (context, snapshot) => SingleChildScrollView(
+          child: snapshot.hasData
+              ? Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: snapshot.data?.map((data) {
+              return _Card.fromData(
+                  data,
+                  onLike: (String title, bool isLiked)
+                  => _showSnackBar(context, title, isLiked),
+                  onTap: () => _navToDetails(context, data),
+              );
+            }).toList() ?? [],
+          )
+          : const CircularProgressIndicator(),
         ),
       ),
     );
   }
 
-  void _showSnackBar(BuildContext context, String title, bool isLiked){
+  void _showSnackBar(BuildContext context, String title, bool isLiked) {
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-        content: Center(
-          child: Text(
-            'goddam u ${isLiked ? "liked $title" : "disliked $title :("}',
-            style: TextStyle(
-              fontSize: 17,
-              color: Colors.white,
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Center(
+            child: Text(
+              'goddam u ${isLiked ? "liked $title" : "disliked $title :("}',
+              style: TextStyle(fontSize: 17, color: Colors.white),
             ),
           ),
+          backgroundColor: Color.fromRGBO(26, 0, 137, 100),
+          duration: const Duration(milliseconds: 1500),
         ),
-        backgroundColor: Color.fromRGBO(26, 0, 137, 100),
-        duration: const Duration(milliseconds: 1500),
-      ));
+      );
     });
   }
 
-  void _navToDetails(BuildContext context, CardData data){
+  void _navToDetails(BuildContext context, CardData data) {
     Navigator.push(
       context,
       CupertinoPageRoute(builder: (context) => DetailsPage(data)),

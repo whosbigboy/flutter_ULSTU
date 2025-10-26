@@ -13,10 +13,10 @@ class MyApp extends StatelessWidget {
     final Color whiteChocolate = Color.fromRGBO(239, 231, 211, 100);
     return MaterialApp(
       title: 'Flutter Demo',
-      debugShowCheckedModeBanner: false ,
+      debugShowCheckedModeBanner: false,
       theme: ThemeData(
-          colorScheme: ColorScheme.fromSeed(seedColor: Colors.grey),
-          scaffoldBackgroundColor: whiteChocolate
+        colorScheme: ColorScheme.fromSeed(seedColor: Colors.grey),
+        scaffoldBackgroundColor: whiteChocolate,
       ),
       home: const MyHomePage(title: 'Baryshev Dima PIbd-33'),
     );
