@@ -15,14 +15,14 @@ class TitleDto {
 @JsonSerializable(createToJson: false)
 class TitleDataDto {
   final String? title_english;
-  final String? title_default;
+  final String? title;
   final double? score;
   final int? episodes;
   final TitleImagesDto? images;
 
   const TitleDataDto({
     this.title_english,
-    this.title_default,
+    this.title,
     this.score,
     this.episodes,
     this.images,

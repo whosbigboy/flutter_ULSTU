@@ -21,7 +21,15 @@ class _MyHomePageState extends State<MyHomePage> {
     return Scaffold(
       appBar: AppBar(
         backgroundColor: darkblue,
-        title: Text(widget.title, style: TextStyle(color: Colors.white)),
+        title: Center(
+            child: Text(
+              widget.title,
+              style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 24
+              ),
+            )
+        ),
       ),
       body: Body(),
     );
@@ -101,7 +109,7 @@ class _CardState extends State<_Card> {
                   child: Image.network(
                     widget.imageUrl ?? "",
                     fit: BoxFit.cover,
-                    errorBuilder: (_, __, ___) => const Placeholder(),
+                    errorBuilder: (_, __, ___) => Image.network('https://i.pinimg.com/736x/09/72/f1/0972f1465684046cc884eca70fdde096.jpg')
                   ),
                 ),
               ),
@@ -166,30 +174,52 @@ class _CardState extends State<_Card> {
   }
 }
 
-class Body extends StatelessWidget {
+class Body extends StatefulWidget {
   const Body({super.key});
 
   @override
+  State<Body> createState() => _BodyState();
+}
+
+class _BodyState extends State<Body> {
+  @override
   Widget build(BuildContext context) {
-    final data = AnimeRepository().loadData();
+    var data = AnimeRepository().loadData();
     return Center(
-      child: FutureBuilder<List<CardData>?>(
-        future: data,
-        builder: (context, snapshot) => SingleChildScrollView(
-          child: snapshot.hasData
-              ? Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: snapshot.data?.map((data) {
-              return _Card.fromData(
-                  data,
-                  onLike: (String title, bool isLiked)
-                  => _showSnackBar(context, title, isLiked),
-                  onTap: () => _navToDetails(context, data),
-              );
-            }).toList() ?? [],
-          )
-          : const CircularProgressIndicator(),
-        ),
+      child: Column(
+        children: [
+          Padding(
+            padding: const EdgeInsets.all(12.0),
+            child: CupertinoSearchTextField(
+              controller: SearchController(),
+              onChanged: (search) {
+                setState((){
+                  data = AnimeRepository().loadData(q:search);
+                });
+              },
+            ),
+          ),
+          Expanded(
+            child: FutureBuilder<List<CardData>?>(
+              future: data,
+              builder: (context, snapshot) => SingleChildScrollView(
+                child: snapshot.hasData
+                    ? Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: snapshot.data?.map((data) {
+                    return _Card.fromData(
+                        data,
+                        onLike: (String title, bool isLiked)
+                        => _showSnackBar(context, title, isLiked),
+                        onTap: () => _navToDetails(context, data),
+                    );
+                  }).toList() ?? [],
+                )
+                : const CircularProgressIndicator(),
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }

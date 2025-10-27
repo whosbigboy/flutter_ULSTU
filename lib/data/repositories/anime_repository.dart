@@ -16,7 +16,7 @@ class AnimeRepository extends ApiInterface{
   static const String _baseUrl = 'https://api.jikan.moe/v4/';
 
   @override
-  Future<List<CardData>?> loadData() async {
+  Future<List<CardData>?> loadData({String? q}) async {
     try{
       const String url = '${_baseUrl}top/anime';
 

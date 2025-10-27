@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 
 class MockRepository extends ApiInterface{
   @override
-  Future<List<CardData>?> loadData() async{
+  Future<List<CardData>?> loadData({String? q}) async{
     return [
       CardData(
         "Gurren Laggan",
