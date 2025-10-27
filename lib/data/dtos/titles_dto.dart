@@ -47,10 +47,7 @@ class TitleImageDto {
   final String? image_url;
   final String? large_image_url;
 
-  const TitleImageDto({
-    this.image_url,
-    this.large_image_url,
-  });
+  const TitleImageDto({this.image_url, this.large_image_url});
 
   factory TitleImageDto.fromJson(Map<String, dynamic> json) =>
       _$TitleImageDtoFromJson(json);

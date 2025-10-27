@@ -22,20 +22,16 @@ class _MyHomePageState extends State<MyHomePage> {
       appBar: AppBar(
         backgroundColor: darkblue,
         title: Center(
-            child: Text(
-              widget.title,
-              style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 24
-              ),
-            )
+          child: Text(
+            widget.title,
+            style: TextStyle(color: Colors.white, fontSize: 24),
+          ),
         ),
       ),
       body: Body(),
     );
   }
 }
-
 
 class _Card extends StatefulWidget {
   final String text;
@@ -46,19 +42,19 @@ class _Card extends StatefulWidget {
   final VoidCallback? onTap;
 
   const _Card(
-      this.text, {
-        this.icon = Icons.face,
-        required this.descriptionText,
-        this.imageUrl,
-        this.onLike,
-        this.onTap,
-      });
+    this.text, {
+    this.icon = Icons.face,
+    required this.descriptionText,
+    this.imageUrl,
+    this.onLike,
+    this.onTap,
+  });
 
   factory _Card.fromData(
-      CardData data, {
-        OnLikeCallBack onLike,
-        VoidCallback? onTap,
-      }) => _Card(
+    CardData data, {
+    OnLikeCallBack onLike,
+    VoidCallback? onTap,
+  }) => _Card(
     data.text,
     descriptionText: data.descriptionText,
     icon: data.icon,
@@ -109,7 +105,9 @@ class _CardState extends State<_Card> {
                   child: Image.network(
                     widget.imageUrl ?? "",
                     fit: BoxFit.cover,
-                    errorBuilder: (_, __, ___) => Image.network('https://i.pinimg.com/736x/09/72/f1/0972f1465684046cc884eca70fdde096.jpg')
+                    errorBuilder: (_, __, ___) => Image.network(
+                      'https://i.pinimg.com/736x/09/72/f1/0972f1465684046cc884eca70fdde096.jpg',
+                    ),
                   ),
                 ),
               ),
@@ -154,14 +152,14 @@ class _CardState extends State<_Card> {
                       duration: const Duration(milliseconds: 200),
                       child: isLiked
                           ? const Icon(
-                        Icons.favorite,
-                        color: Color.fromRGBO(102, 2, 60, 100),
-                        key: ValueKey<int>(0),
-                      )
+                              Icons.favorite,
+                              color: Color.fromRGBO(102, 2, 60, 100),
+                              key: ValueKey<int>(0),
+                            )
                           : const Icon(
-                        Icons.favorite_outline,
-                        key: ValueKey<int>(1),
-                      ),
+                              Icons.favorite_outline,
+                              key: ValueKey<int>(1),
+                            ),
                     ),
                   ),
                 ),
@@ -193,8 +191,8 @@ class _BodyState extends State<Body> {
             child: CupertinoSearchTextField(
               controller: SearchController(),
               onChanged: (search) {
-                setState((){
-                  data = AnimeRepository().loadData(q:search);
+                setState(() {
+                  data = AnimeRepository().loadData(q: search);
                 });
               },
             ),
@@ -205,17 +203,19 @@ class _BodyState extends State<Body> {
               builder: (context, snapshot) => SingleChildScrollView(
                 child: snapshot.hasData
                     ? Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: snapshot.data?.map((data) {
-                    return _Card.fromData(
-                        data,
-                        onLike: (String title, bool isLiked)
-                        => _showSnackBar(context, title, isLiked),
-                        onTap: () => _navToDetails(context, data),
-                    );
-                  }).toList() ?? [],
-                )
-                : const CircularProgressIndicator(),
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children:
+                            snapshot.data?.map((data) {
+                              return _Card.fromData(
+                                data,
+                                onLike: (String title, bool isLiked) =>
+                                    _showSnackBar(context, title, isLiked),
+                                onTap: () => _navToDetails(context, data),
+                              );
+                            }).toList() ??
+                            [],
+                      )
+                    : const CircularProgressIndicator(),
               ),
             ),
           ),

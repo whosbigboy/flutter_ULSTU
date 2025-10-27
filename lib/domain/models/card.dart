@@ -16,4 +16,3 @@ class CardData {
 }
 
 typedef OnLikeCallBack = void Function(String title, bool isLiked)?;
-
