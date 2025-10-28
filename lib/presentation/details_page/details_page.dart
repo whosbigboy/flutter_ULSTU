@@ -12,6 +12,7 @@ class DetailsPage extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Color.fromRGBO(26, 0, 137, 100),
+        iconTheme: IconThemeData(color: Colors.white),
         title: Center(
           child: Text(
             data.text,
