@@ -55,4 +55,9 @@ class MockRepository extends ApiInterface {
       ),
     ];
   }
+
+  @override
+  Future<List<CardData>?> searchData({String? q}) async {
+
+  }
 }

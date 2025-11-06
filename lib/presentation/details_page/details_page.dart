@@ -25,7 +25,13 @@ class DetailsPage extends StatelessWidget {
         children: [
           Padding(
             padding: const EdgeInsets.only(bottom: 16),
-            child: Image.network(data.imageUrl ?? ''),
+            child: Image.network(data.imageUrl ?? '',
+              fit: BoxFit.cover,
+              errorBuilder: (_, __, ___) => Image.network(
+                'https://i.pinimg.com/736x/09/72/f1/0972f1465684046cc884eca70fdde096.jpg',
+              ),
+            ),
+
           ),
           Center(
             child: Text(data.descriptionText, style: TextStyle(fontSize: 25)),

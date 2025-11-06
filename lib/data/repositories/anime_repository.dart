@@ -16,17 +16,34 @@ class AnimeRepository extends ApiInterface {
   Future<List<CardData>?> loadData({String? q}) async {
     try {
       const String url = '${_baseUrl}top/anime';
-
-      final Response<dynamic> response = await _dio.get<Map<dynamic, dynamic>>(
-        url,
-      );
-
-      final TitleDto dto = TitleDto.fromJson(
-        response.data as Map<String, dynamic>,
-      );
+      final Response<dynamic> response = await _dio.get<Map<dynamic, dynamic>>(url);
+      final TitleDto dto = TitleDto.fromJson(response.data as Map<String, dynamic>);
       final List<CardData>? data = dto.data?.map((e) => e.toDomain()).toList();
       return data;
     } on DioException catch (e) {
+      return null;
+    }
+  }
+
+  @override
+  Future<List<CardData>?> searchData({String? q}) async {
+    try {
+      final String url = '${_baseUrl}anime';
+      final Response<dynamic> response = await _dio.get<Map<dynamic, dynamic>>(
+        url,
+        queryParameters: {
+          'q': q,
+          'limit': 25,
+          'order_by': 'popularity',
+          'sort': 'asc',
+        },
+      );
+
+      final TitleDto dto = TitleDto.fromJson(response.data as Map<String, dynamic>);
+      final List<CardData>? data = dto.data?.map((e) => e.toDomain()).toList();
+      return data;
+    } on DioException catch (e) {
+      print('Search error: $e');
       return null;
     }
   }

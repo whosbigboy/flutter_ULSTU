@@ -1,9 +1,15 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter_app/data/repositories/mock_repository.dart';
 import 'package:flutter_app/domain/models/card.dart';
+import 'package:flutter_app/presentation/home_page/bloc/state.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 
 import 'package:flutter_app/presentation/details_page/details_page.dart';
+import 'package:flutter_app/presentation/home_page/bloc/bloc.dart';
+import 'package:flutter_app/presentation/home_page/bloc/events.dart';
 
 import '../../data/repositories/anime_repository.dart';
 
@@ -180,44 +186,86 @@ class Body extends StatefulWidget {
 }
 
 class _BodyState extends State<Body> {
+  final searchController = TextEditingController();
+  Timer? _debounce;
+
+  @override
+  void initState(){
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      context.read<HomeBloc>().add(const HomeLoadDataEvent());
+    });
+    super.initState();
+  }
+
+  @override
+  void dispose(){
+    searchController.dispose();
+    _debounce?.cancel();
+    super.dispose();
+  }
+
+  void _onSearchChanged(String search) {
+    if (_debounce?.isActive ?? false) _debounce?.cancel();
+
+    _debounce = Timer(const Duration(milliseconds: 500), () {
+      if (search.isEmpty) {
+        context.read<HomeBloc>().add(const HomeLoadDataEvent());
+      } else {
+        context.read<HomeBloc>().add(HomeSearchDataEvent(search));
+      }
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
-    var data = AnimeRepository().loadData();
     return Center(
       child: Column(
         children: [
           Padding(
             padding: const EdgeInsets.all(12.0),
             child: CupertinoSearchTextField(
-              controller: SearchController(),
-              onChanged: (search) {
-                setState(() {
-                  data = AnimeRepository().loadData(q: search);
-                });
-              },
+              controller: searchController,
+              onChanged: _onSearchChanged,
+              placeholder: 'Search anime...',
             ),
           ),
-          Expanded(
-            child: FutureBuilder<List<CardData>?>(
-              future: data,
-              builder: (context, snapshot) => SingleChildScrollView(
-                child: snapshot.hasData
-                    ? Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children:
-                            snapshot.data?.map((data) {
-                              return _Card.fromData(
-                                data,
-                                onLike: (String title, bool isLiked) =>
-                                    _showSnackBar(context, title, isLiked),
-                                onTap: () => _navToDetails(context, data),
-                              );
-                            }).toList() ??
-                            [],
-                      )
-                    : const CircularProgressIndicator(),
-              ),
-            ),
+          BlocBuilder<HomeBloc, HomeState>(
+              builder: (context, state) {
+                if (state.isLoading) {
+                  return const Expanded(
+                    child: Center(child: CircularProgressIndicator()),
+                  );
+                }
+
+                final items = state.data ?? [];
+
+                if (items.isEmpty && searchController.text.isNotEmpty) {
+                  return const Expanded(
+                    child: Center(
+                      child: Text(
+                        'No results found',
+                        style: TextStyle(fontSize: 18),
+                      ),
+                    ),
+                  );
+                }
+
+                return Expanded(
+                  child: ListView.builder(
+                    padding: EdgeInsets.zero,
+                    itemCount: items.length,
+                    itemBuilder: (context, index) {
+                      final data = items[index];
+                      return _Card.fromData(
+                        data,
+                        onLike: (title, isLiked) =>
+                            _showSnackBar(context, title, isLiked),
+                        onTap: () => _navToDetails(context, data),
+                      );
+                    },
+                  ),
+                );
+              }
           ),
         ],
       ),
