@@ -3,33 +3,36 @@ import 'package:json_annotation/json_annotation.dart';
 part 'titles_dto.g.dart';
 
 @JsonSerializable(createToJson: false)
-class TitleDto {
+class TitlesDto {
   final List<TitleDataDto>? data;
+  final PaginationDto? pagination;
 
-  const TitleDto({this.data});
+  const TitlesDto({
+    this.data,
+    this.pagination,
+  });
 
-  factory TitleDto.fromJson(Map<String, dynamic> json) =>
-      _$TitleDtoFromJson(json);
+  factory TitlesDto.fromJson(Map<String, dynamic> json) => _$TitlesDtoFromJson(json);
 }
 
 @JsonSerializable(createToJson: false)
 class TitleDataDto {
-  final String? title_english;
+  @JsonKey(name: 'title_english')
+  final String? titleEnglish;
   final String? title;
   final double? score;
   final int? episodes;
   final TitleImagesDto? images;
 
   const TitleDataDto({
-    this.title_english,
+    this.titleEnglish,
     this.title,
     this.score,
     this.episodes,
     this.images,
   });
 
-  factory TitleDataDto.fromJson(Map<String, dynamic> json) =>
-      _$TitleDataDtoFromJson(json);
+  factory TitleDataDto.fromJson(Map<String, dynamic> json) => _$TitleDataDtoFromJson(json);
 }
 
 @JsonSerializable(createToJson: false)
@@ -38,17 +41,38 @@ class TitleImagesDto {
 
   const TitleImagesDto({this.jpg});
 
-  factory TitleImagesDto.fromJson(Map<String, dynamic> json) =>
-      _$TitleImagesDtoFromJson(json);
+  factory TitleImagesDto.fromJson(Map<String, dynamic> json) => _$TitleImagesDtoFromJson(json);
 }
 
 @JsonSerializable(createToJson: false)
 class TitleImageDto {
-  final String? image_url;
-  final String? large_image_url;
+  @JsonKey(name: 'image_url')
+  final String? imageUrl;
+  @JsonKey(name: 'large_image_url')
+  final String? largeImageUrl;
 
-  const TitleImageDto({this.image_url, this.large_image_url});
+  const TitleImageDto({
+    this.imageUrl,
+    this.largeImageUrl,
+  });
 
-  factory TitleImageDto.fromJson(Map<String, dynamic> json) =>
-      _$TitleImageDtoFromJson(json);
+  factory TitleImageDto.fromJson(Map<String, dynamic> json) => _$TitleImageDtoFromJson(json);
+}
+
+@JsonSerializable(createToJson: false)
+class PaginationDto {
+  @JsonKey(name: 'last_visible_page')
+  final int? lastVisiblePage;
+  @JsonKey(name: 'has_next_page')
+  final bool? hasNextPage;
+  @JsonKey(name: 'current_page')
+  final int? currentPage;
+
+  const PaginationDto({
+    this.lastVisiblePage,
+    this.hasNextPage,
+    this.currentPage,
+  });
+
+  factory PaginationDto.fromJson(Map<String, dynamic> json) => _$PaginationDtoFromJson(json);
 }

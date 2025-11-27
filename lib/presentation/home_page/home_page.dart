@@ -185,23 +185,40 @@ class Body extends StatefulWidget {
   State<Body> createState() => _BodyState();
 }
 
+// home_page.dart (только важные части)
 class _BodyState extends State<Body> {
   final searchController = TextEditingController();
+  final scrollController = ScrollController();
   Timer? _debounce;
 
   @override
-  void initState(){
+  void initState() {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       context.read<HomeBloc>().add(const HomeLoadDataEvent());
     });
+
+    scrollController.addListener(_onNextPageListener);
     super.initState();
   }
 
   @override
-  void dispose(){
+  void dispose() {
     searchController.dispose();
+    scrollController.dispose();
     _debounce?.cancel();
     super.dispose();
+  }
+
+  void _onNextPageListener() {
+    if (scrollController.offset > scrollController.position.maxScrollExtent*0.9) {
+      final bloc = context.read<HomeBloc>();
+      if (!bloc.state.isPaginationLoading){
+        bloc.add(HomeLoadDataEvent(
+          search: searchController.text,
+          loadMore: true
+        ));
+      }
+    }
   }
 
   void _onSearchChanged(String search) {
@@ -230,32 +247,57 @@ class _BodyState extends State<Body> {
             ),
           ),
           BlocBuilder<HomeBloc, HomeState>(
-              builder: (context, state) => state.isLoading
-              ? const CircularProgressIndicator()
-              : Expanded(
+          builder: (context, state) => state.error != null
+            ? Text(
+              state.error ?? '',
+              style: Theme.of(context).textTheme.headlineSmall?.copyWith(color: Colors.red),
+            )
+          : state.isLoading
+            ? const CircularProgressIndicator()
+                : Expanded(
                 child: RefreshIndicator(
                   onRefresh: _onRefresh,
                   child: ListView.builder(
+                    controller: scrollController,
                     padding: EdgeInsets.zero,
-                    itemCount: state.data?.length ?? 0,
-                    itemBuilder: (context, index){
-                      final data = state.data?[index];
-                      return data!=null
-                        ? _Card.fromData(
-                          data,
-                          onLike: (title, isLiked) =>
+                    itemCount: (state.data?.length ?? 0) + (state.hasNextPage ? 1 : 0),
+                    itemBuilder: (context, index) {
+                      if (index >= (state.data?.length ?? 0)) {
+                        return Padding(
+                          padding: const EdgeInsets.all(16.0),
+                          child: Center(
+                            child: state.isPaginationLoading
+                                ? const CircularProgressIndicator()
+                                : const Text('Load more...'),
+                          ),
+                        );
+                      }
+
+                      final data = state.data![index];
+                      return _Card.fromData(
+                        data,
+                        onLike: (title, isLiked) =>
                             _showSnackBar(context, title, isLiked),
-                          onTap: () => _navToDetails(context, data),
-                          )
-                        : const SizedBox.shrink();
-                    }
-                  )
-                )
+                        onTap: () => _navToDetails(context, data),
+                      );
+                    },
+                  ),
+                ),
               )
-          )
+          ),
         ],
       ),
     );
+  }
+
+  Future<void> _onRefresh() {
+    final state = context.read<HomeBloc>().state;
+    if (state.searchQuery?.isNotEmpty == true) {
+      context.read<HomeBloc>().add(HomeSearchDataEvent(state.searchQuery!));
+    } else {
+      context.read<HomeBloc>().add(const HomeLoadDataEvent());
+    }
+    return Future.value(null);
   }
 
   void _showSnackBar(BuildContext context, String title, bool isLiked) {
@@ -280,10 +322,5 @@ class _BodyState extends State<Body> {
       context,
       CupertinoPageRoute(builder: (context) => DetailsPage(data)),
     );
-  }
-
-  Future<void> _onRefresh(){
-    context.read<HomeBloc>().add(HomeLoadDataEvent(search: searchController.text));
-    return Future.value(null);
   }
 }
