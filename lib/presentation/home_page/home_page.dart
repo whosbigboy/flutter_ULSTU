@@ -230,43 +230,29 @@ class _BodyState extends State<Body> {
             ),
           ),
           BlocBuilder<HomeBloc, HomeState>(
-              builder: (context, state) {
-                if (state.isLoading) {
-                  return const Expanded(
-                    child: Center(child: CircularProgressIndicator()),
-                  );
-                }
-
-                final items = state.data ?? [];
-
-                if (items.isEmpty && searchController.text.isNotEmpty) {
-                  return const Expanded(
-                    child: Center(
-                      child: Text(
-                        'No results found',
-                        style: TextStyle(fontSize: 18),
-                      ),
-                    ),
-                  );
-                }
-
-                return Expanded(
+              builder: (context, state) => state.isLoading
+              ? const CircularProgressIndicator()
+              : Expanded(
+                child: RefreshIndicator(
+                  onRefresh: _onRefresh,
                   child: ListView.builder(
                     padding: EdgeInsets.zero,
-                    itemCount: items.length,
-                    itemBuilder: (context, index) {
-                      final data = items[index];
-                      return _Card.fromData(
-                        data,
-                        onLike: (title, isLiked) =>
+                    itemCount: state.data?.length ?? 0,
+                    itemBuilder: (context, index){
+                      final data = state.data?[index];
+                      return data!=null
+                        ? _Card.fromData(
+                          data,
+                          onLike: (title, isLiked) =>
                             _showSnackBar(context, title, isLiked),
-                        onTap: () => _navToDetails(context, data),
-                      );
-                    },
-                  ),
-                );
-              }
-          ),
+                          onTap: () => _navToDetails(context, data),
+                          )
+                        : const SizedBox.shrink();
+                    }
+                  )
+                )
+              )
+          )
         ],
       ),
     );
@@ -294,5 +280,10 @@ class _BodyState extends State<Body> {
       context,
       CupertinoPageRoute(builder: (context) => DetailsPage(data)),
     );
+  }
+
+  Future<void> _onRefresh(){
+    context.read<HomeBloc>().add(HomeLoadDataEvent(search: searchController.text));
+    return Future.value(null);
   }
 }
