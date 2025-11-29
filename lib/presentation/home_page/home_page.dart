@@ -2,9 +2,12 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
+import 'package:flutter_app/components/extensions/context_x.dart';
+import 'package:flutter_app/components/utils/debounce.dart';
 import 'package:flutter_app/data/repositories/mock_repository.dart';
 import 'package:flutter_app/domain/models/card.dart';
 import 'package:flutter_app/presentation/home_page/bloc/state.dart';
+import 'package:flutter_app/presentation/like_bloc/like_bloc.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import 'package:flutter_app/presentation/details_page/details_page.dart';
@@ -12,6 +15,12 @@ import 'package:flutter_app/presentation/home_page/bloc/bloc.dart';
 import 'package:flutter_app/presentation/home_page/bloc/events.dart';
 
 import '../../data/repositories/anime_repository.dart';
+import '../common/svg_objects.dart';
+import '../like_bloc/like_event.dart';
+import '../like_bloc/like_state.dart';
+import '../locale_bloc/locale_bloc.dart';
+import '../locale_bloc/locale_events.dart';
+import '../locale_bloc/locale_state.dart';
 
 class MyHomePage extends StatefulWidget {
   const MyHomePage({super.key, required this.title});
@@ -39,47 +48,50 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 }
 
-class _Card extends StatefulWidget {
+typedef OnLikeCallback = void Function(String? id, String title, bool isLiked)?;
+
+class _Card extends StatelessWidget {
   final String text;
   final String descriptionText;
   final IconData icon;
   final String? imageUrl;
-  final OnLikeCallBack onLike;
+  final OnLikeCallback onLike;
   final VoidCallback? onTap;
+  final String? id;
+  final bool isLiked;
 
   const _Card(
-    this.text, {
-    this.icon = Icons.face,
-    required this.descriptionText,
-    this.imageUrl,
-    this.onLike,
-    this.onTap,
-  });
+      this.text, {
+        this.icon = Icons.ac_unit_outlined,
+        required this.descriptionText,
+        this.imageUrl,
+        this.onLike,
+        this.onTap,
+        this.id,
+        this.isLiked = false,
+      });
 
   factory _Card.fromData(
-    CardData data, {
-    OnLikeCallBack onLike,
-    VoidCallback? onTap,
-  }) => _Card(
-    data.text,
-    descriptionText: data.descriptionText,
-    icon: data.icon,
-    imageUrl: data.imageUrl,
-    onLike: onLike,
-    onTap: onTap,
-  );
+      CardData data, {
+        OnLikeCallback onLike,
+        VoidCallback? onTap,
+        bool isLiked = false,
+      }) =>
+      _Card(
+        data.text,
+        descriptionText: data.descriptionText,
+        icon: data.icon,
+        imageUrl: data.imageUrl,
+        onLike: onLike,
+        onTap: onTap,
+        isLiked: isLiked,
+        id: data.id,
+      );
 
-  @override
-  State<_Card> createState() => _CardState();
-}
-
-class _CardState extends State<_Card> {
-  bool isLiked = false;
-  final Color niceOrange = Color.fromRGBO(255, 94, 51, 100);
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
-      onTap: widget.onTap,
+      onTap: onTap,
       child: Container(
         margin: const EdgeInsets.all(16),
         constraints: const BoxConstraints(minHeight: 150),
@@ -94,7 +106,7 @@ class _CardState extends State<_Card> {
               blurRadius: 8,
             ),
           ],
-          color: niceOrange,
+          color: Colors.deepOrangeAccent //переделать на норм орандж,
         ),
         child: IntrinsicHeight(
           child: Row(
@@ -109,7 +121,7 @@ class _CardState extends State<_Card> {
                   height: double.infinity,
                   width: 150,
                   child: Image.network(
-                    widget.imageUrl ?? "",
+                    imageUrl ?? "",
                     fit: BoxFit.cover,
                     errorBuilder: (_, __, ___) => Image.network(
                       'https://i.pinimg.com/736x/09/72/f1/0972f1465684046cc884eca70fdde096.jpg',
@@ -124,7 +136,7 @@ class _CardState extends State<_Card> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        widget.text,
+                        text,
                         style: TextStyle(
                           fontSize: 25,
                           fontWeight: FontWeight.bold,
@@ -132,7 +144,7 @@ class _CardState extends State<_Card> {
                         ),
                       ),
                       Text(
-                        widget.descriptionText,
+                        descriptionText,
                         style: TextStyle(fontSize: 18, color: Colors.white),
                       ),
                     ],
@@ -148,24 +160,19 @@ class _CardState extends State<_Card> {
                     bottom: 16,
                   ),
                   child: GestureDetector(
-                    onTap: () {
-                      setState(() {
-                        isLiked = !isLiked;
-                      });
-                      widget.onLike?.call(widget.text, isLiked);
-                    },
+                    onTap: () => onLike?.call(id, text, isLiked),
                     child: AnimatedSwitcher(
                       duration: const Duration(milliseconds: 200),
                       child: isLiked
                           ? const Icon(
-                              Icons.favorite,
-                              color: Color.fromRGBO(102, 2, 60, 100),
-                              key: ValueKey<int>(0),
-                            )
+                        Icons.favorite,
+                        color: Color.fromRGBO(102, 2, 60, 100),
+                        key: ValueKey<int>(0),
+                      )
                           : const Icon(
-                              Icons.favorite_outline,
-                              key: ValueKey<int>(1),
-                            ),
+                        Icons.favorite_outline,
+                        key: ValueKey<int>(1),
+                      ),
                     ),
                   ),
                 ),
@@ -185,7 +192,6 @@ class Body extends StatefulWidget {
   State<Body> createState() => _BodyState();
 }
 
-// home_page.dart (только важные части)
 class _BodyState extends State<Body> {
   final searchController = TextEditingController();
   final scrollController = ScrollController();
@@ -193,8 +199,10 @@ class _BodyState extends State<Body> {
 
   @override
   void initState() {
+    SvgObjects.init();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       context.read<HomeBloc>().add(const HomeLoadDataEvent());
+      context.read<LikeBloc>().add(const LoadLikesEvent());
     });
 
     scrollController.addListener(_onNextPageListener);
@@ -238,13 +246,39 @@ class _BodyState extends State<Body> {
     return Center(
       child: Column(
         children: [
-          Padding(
-            padding: const EdgeInsets.all(12.0),
-            child: CupertinoSearchTextField(
-              controller: searchController,
-              onChanged: _onSearchChanged,
-              placeholder: 'Search anime...',
-            ),
+          Row(
+            children: [
+              Expanded(
+                flex: 4,
+                child: Padding(
+                  padding: const EdgeInsets.all(12),
+                  child: CupertinoSearchTextField(
+                    controller: searchController,
+                    placeholder: context.locale.search,
+                    onChanged: (search) {
+                      Debounce.run(
+                              () => context.read<HomeBloc>().add(HomeLoadDataEvent(search: search)));
+                    },
+                  ),
+                ),
+              ),
+              GestureDetector(
+                onTap: () => context.read<LocaleBloc>().add(const ChangeLocaleEvent()),
+                child: SizedBox.square(
+                  dimension: 50,
+                  child: Padding(
+                    padding: const EdgeInsets.only(right: 12),
+                    child: BlocBuilder<LocaleBloc, LocaleState>(
+                      builder: (context, state) {
+                        return state.currentLocale.languageCode == 'ru'
+                            ? const SvgRu()
+                            : const SvgUk();
+                      },
+                    ),
+                  ),
+                ),
+              ),
+            ],
           ),
           BlocBuilder<HomeBloc, HomeState>(
           builder: (context, state) => state.error != null
@@ -254,36 +288,38 @@ class _BodyState extends State<Body> {
             )
           : state.isLoading
             ? const CircularProgressIndicator()
-                : Expanded(
-                child: RefreshIndicator(
-                  onRefresh: _onRefresh,
-                  child: ListView.builder(
-                    controller: scrollController,
-                    padding: EdgeInsets.zero,
-                    itemCount: (state.data?.length ?? 0) + (state.hasNextPage ? 1 : 0),
-                    itemBuilder: (context, index) {
-                      if (index >= (state.data?.length ?? 0)) {
-                        return Padding(
-                          padding: const EdgeInsets.all(16.0),
-                          child: Center(
-                            child: state.isPaginationLoading
-                                ? const CircularProgressIndicator()
-                                : const Text('Load more...'),
-                          ),
-                        );
-                      }
-
-                      final data = state.data![index];
-                      return _Card.fromData(
-                        data,
-                        onLike: (title, isLiked) =>
-                            _showSnackBar(context, title, isLiked),
-                        onTap: () => _navToDetails(context, data),
-                      );
-                    },
+                : BlocBuilder<LikeBloc, LikeState>(
+                  builder: (context, likeState) {
+                    return Expanded(
+                        child: RefreshIndicator(
+                          onRefresh: _onRefresh,
+                          child: ListView.builder(
+                            controller: scrollController,
+                            padding: EdgeInsets.zero,
+                            itemCount: (state.data?.length ?? 0) + (state.hasNextPage ? 1 : 0),
+                            itemBuilder: (context, index) {
+                                  final data = state.data?.data?[index];
+                                  return data != null
+                                      ? _Card.fromData(
+                                      data,
+                                      onLike: _onLike,
+                                      isLiked: likeState.likedIds?.contains(data.id) == true,
+                                      onTap: () => _navToDetails(context, data),
+                                )
+                                    : const SizedBox.shrink();
+                            }
+                          )
+                      )
+                    );
+                  },
+                BlocBuilder<HomeBloc, HomeState>(
+                builder: (context, state) => state.isPaginationLoading
+                ? const CircularProgressIndicator()
+                    : const SizedBox.shrink(),
+                                ),
                   ),
-                ),
-              )
+                                ),
+                )
           ),
         ],
       ),
@@ -306,7 +342,7 @@ class _BodyState extends State<Body> {
         SnackBar(
           content: Center(
             child: Text(
-              'goddam u ${isLiked ? "liked $title" : "disliked $title :("}',
+              '${isLiked ? context.locale.liked : context.locale.disliked} $title',
               style: TextStyle(fontSize: 17, color: Colors.white),
             ),
           ),
@@ -322,5 +358,12 @@ class _BodyState extends State<Body> {
       context,
       CupertinoPageRoute(builder: (context) => DetailsPage(data)),
     );
+  }
+
+  void _onLike(String? id, String title, bool isLiked){
+    if (id != null) {
+      context.read<LikeBloc>().add(ChangeLikeEvent(id));
+      _showSnackBar(context, title, !isLiked);
+    }
   }
 }
