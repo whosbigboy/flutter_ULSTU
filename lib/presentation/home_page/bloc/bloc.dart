@@ -20,18 +20,14 @@ class HomeBloc extends Bloc<HomeEvent, HomeState>{
       emit(state.copyWith(
         isLoading: true,
         searchQuery: event.search,
+        error: null,
       ));
     } else {
       emit(state.copyWith(isPaginationLoading: true));
     }
 
-    String? error;
-
     try {
-      final data = await repo.loadData(
-        page: page,
-        onError: (e) => error = e,
-      );
+      final data = await repo.loadData(page: page);
 
       if (data != null) {
         final newData = event.loadMore && state.data != null
@@ -44,13 +40,20 @@ class HomeBloc extends Bloc<HomeEvent, HomeState>{
           data: newData,
           hasNextPage: data.hasNextPage,
           currentPage: page,
-          error: error,
+          error: null,
+        ));
+      } else {
+        emit(state.copyWith(
+          isLoading: false,
+          isPaginationLoading: false,
+          error: 'Failed to load data',
         ));
       }
     } catch (e) {
       emit(state.copyWith(
         isLoading: false,
         isPaginationLoading: false,
+        error: e.toString(),
       ));
     }
   }

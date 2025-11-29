@@ -5,7 +5,6 @@ typedef OnErrorCallback = void Function(String? error);
 
 abstract class ApiInterface {
   Future<HomeData?> loadData({
-    OnErrorCallback? onError,
     int page = 1,
   });
 

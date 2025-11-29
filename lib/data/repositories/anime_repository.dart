@@ -11,11 +11,10 @@ class AnimeRepository extends ApiInterface {
   static final Dio _dio = Dio()
     ..interceptors.add(PrettyDioLogger(requestHeader: true, requestBody: true));
 
-  static const String _baseUrl = 'https://api.jikan___.moe/v4/';
+  static const String _baseUrl = 'https://api.jikan.moe/v4/';
 
   @override
   Future<HomeData?> loadData({
-    OnErrorCallback? onError,
     int page = 1,
   }) async {
     try {
@@ -31,8 +30,10 @@ class AnimeRepository extends ApiInterface {
       final HomeData data = dto.toDomain();
       return data;
     } on DioException catch (e) {
-      onError?.call(e.error?.toString());
-      return null;
+      // Просто пробрасываем исключение, Bloc его поймает
+      throw Exception('Network error: ${e.message}');
+    } catch (e) {
+      throw Exception('Unexpected error: $e');
     }
   }
 
