@@ -10,7 +10,7 @@ extension TitleDataDtoToModel on TitleDataDto {
         images?.jpg?.imageUrl ??
         'https://i.pinimg.com/736x/51/58/3d/51583d3365337490861dc1a6234e148a.jpg',
     descriptionText: 'Оценка: ${score ?? 'Не оценивали'}\nЭпизодов: ${episodes ?? '?'}',
-    id: id,
+    id: malId?.toString(),
   );
 }
 

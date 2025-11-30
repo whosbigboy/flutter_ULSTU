@@ -23,7 +23,8 @@ class TitleDataDto {
   final double? score;
   final int? episodes;
   final TitleImagesDto? images;
-  final String? id;
+  @JsonKey(name: 'mal_id')
+  final int? malId;
 
   const TitleDataDto({
     this.titleEnglish,
@@ -31,7 +32,7 @@ class TitleDataDto {
     this.score,
     this.episodes,
     this.images,
-    this.id,
+    this.malId,
   });
 
   factory TitleDataDto.fromJson(Map<String, dynamic> json) => _$TitleDataDtoFromJson(json);

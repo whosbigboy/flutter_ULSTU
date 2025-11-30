@@ -7,23 +7,24 @@ part of 'titles_dto.dart';
 // **************************************************************************
 
 TitlesDto _$TitlesDtoFromJson(Map<String, dynamic> json) => TitlesDto(
-  data: (json['data'] as List<dynamic>?)
-      ?.map((e) => TitleDataDto.fromJson(e as Map<String, dynamic>))
-      .toList(),
-  pagination: json['pagination'] == null
-      ? null
-      : PaginationDto.fromJson(json['pagination'] as Map<String, dynamic>),
-);
+      data: (json['data'] as List<dynamic>?)
+          ?.map((e) => TitleDataDto.fromJson(e as Map<String, dynamic>))
+          .toList(),
+      pagination: json['pagination'] == null
+          ? null
+          : PaginationDto.fromJson(json['pagination'] as Map<String, dynamic>),
+    );
 
 TitleDataDto _$TitleDataDtoFromJson(Map<String, dynamic> json) => TitleDataDto(
-  titleEnglish: json['title_english'] as String?,
-  title: json['title'] as String?,
-  score: (json['score'] as num?)?.toDouble(),
-  episodes: (json['episodes'] as num?)?.toInt(),
-  images: json['images'] == null
-      ? null
-      : TitleImagesDto.fromJson(json['images'] as Map<String, dynamic>),
-);
+      titleEnglish: json['title_english'] as String?,
+      title: json['title'] as String?,
+      score: (json['score'] as num?)?.toDouble(),
+      episodes: (json['episodes'] as num?)?.toInt(),
+      images: json['images'] == null
+          ? null
+          : TitleImagesDto.fromJson(json['images'] as Map<String, dynamic>),
+      malId: (json['mal_id'] as num?)?.toInt(),
+    );
 
 TitleImagesDto _$TitleImagesDtoFromJson(Map<String, dynamic> json) =>
     TitleImagesDto(

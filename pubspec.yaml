@@ -41,7 +41,7 @@ dev_dependencies:
   flutter_launcher_icons: ^0.13.1
 
   # Сетевое взаимодействие
-  build_runner: ^2.4.9
+  build_runner: ^2.4.8
   json_serializable: ^6.7.1
 
 flutter_icons:

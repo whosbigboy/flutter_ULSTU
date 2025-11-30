@@ -62,6 +62,7 @@ class _Card extends StatelessWidget {
 
   const _Card(
       this.text, {
+        Key? key,
         this.icon = Icons.ac_unit_outlined,
         required this.descriptionText,
         this.imageUrl,
@@ -69,16 +70,18 @@ class _Card extends StatelessWidget {
         this.onTap,
         this.id,
         this.isLiked = false,
-      });
+      }) : super(key: key);
 
   factory _Card.fromData(
       CardData data, {
+        Key? key,
         OnLikeCallback onLike,
         VoidCallback? onTap,
         bool isLiked = false,
       }) =>
       _Card(
         data.text,
+        key: key,
         descriptionText: data.descriptionText,
         icon: data.icon,
         imageUrl: data.imageUrl,
@@ -106,7 +109,7 @@ class _Card extends StatelessWidget {
               blurRadius: 8,
             ),
           ],
-          color: Colors.deepOrangeAccent //переделать на норм орандж,
+          color: Colors.deepOrangeAccent,
         ),
         child: IntrinsicHeight(
           child: Row(
@@ -160,7 +163,9 @@ class _Card extends StatelessWidget {
                     bottom: 16,
                   ),
                   child: GestureDetector(
-                    onTap: () => onLike?.call(id, text, isLiked),
+                    onTap: () {
+                      onLike?.call(id, text, isLiked);
+                    },
                     child: AnimatedSwitcher(
                       duration: const Duration(milliseconds: 200),
                       child: isLiked
@@ -195,7 +200,6 @@ class Body extends StatefulWidget {
 class _BodyState extends State<Body> {
   final searchController = TextEditingController();
   final scrollController = ScrollController();
-  Timer? _debounce;
 
   @override
   void initState() {
@@ -213,116 +217,141 @@ class _BodyState extends State<Body> {
   void dispose() {
     searchController.dispose();
     scrollController.dispose();
-    _debounce?.cancel();
+    Debounce.cancel();
     super.dispose();
   }
 
   void _onNextPageListener() {
-    if (scrollController.offset > scrollController.position.maxScrollExtent*0.9) {
+    if (scrollController.position.pixels >=
+        scrollController.position.maxScrollExtent - 200) {
       final bloc = context.read<HomeBloc>();
-      if (!bloc.state.isPaginationLoading){
+      if (!bloc.state.isPaginationLoading && bloc.state.hasNextPage) {
         bloc.add(HomeLoadDataEvent(
           search: searchController.text,
-          loadMore: true
+          loadMore: true,
         ));
       }
     }
   }
 
   void _onSearchChanged(String search) {
-    if (_debounce?.isActive ?? false) _debounce?.cancel();
-
-    _debounce = Timer(const Duration(milliseconds: 500), () {
-      if (search.isEmpty) {
-        context.read<HomeBloc>().add(const HomeLoadDataEvent());
-      } else {
-        context.read<HomeBloc>().add(HomeSearchDataEvent(search));
-      }
-    });
+    Debounce.run(
+          () {
+        if (search.isEmpty) {
+          context.read<HomeBloc>().add(const HomeLoadDataEvent());
+        } else {
+          context.read<HomeBloc>().add(HomeSearchDataEvent(search));
+        }
+      },
+      delay: const Duration(milliseconds: 500),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
-    return Center(
-      child: Column(
-        children: [
-          Row(
-            children: [
-              Expanded(
-                flex: 4,
+    return Column(
+      children: [
+        Row(
+          children: [
+            Expanded(
+              flex: 4,
+              child: Padding(
+                padding: const EdgeInsets.all(12),
+                child: CupertinoSearchTextField(
+                  controller: searchController,
+                  placeholder: context.locale.search,
+                  onChanged: _onSearchChanged,
+                ),
+              ),
+            ),
+            GestureDetector(
+              onTap: () {
+                context.read<LocaleBloc>().add(const ChangeLocaleEvent());
+              },
+              child: SizedBox.square(
+                dimension: 50,
                 child: Padding(
-                  padding: const EdgeInsets.all(12),
-                  child: CupertinoSearchTextField(
-                    controller: searchController,
-                    placeholder: context.locale.search,
-                    onChanged: (search) {
-                      Debounce.run(
-                              () => context.read<HomeBloc>().add(HomeLoadDataEvent(search: search)));
+                  padding: const EdgeInsets.only(right: 12),
+                  child: BlocBuilder<LocaleBloc, LocaleState>(
+                    builder: (context, state) {
+                      print('Current Locale: ${state.currentLocale.languageCode}');
+                      return state.currentLocale.languageCode == 'ru'
+                          ? const SvgRu()
+                          : const SvgUk();
                     },
                   ),
                 ),
               ),
-              GestureDetector(
-                onTap: () => context.read<LocaleBloc>().add(const ChangeLocaleEvent()),
-                child: SizedBox.square(
-                  dimension: 50,
-                  child: Padding(
-                    padding: const EdgeInsets.only(right: 12),
-                    child: BlocBuilder<LocaleBloc, LocaleState>(
-                      builder: (context, state) {
-                        return state.currentLocale.languageCode == 'ru'
-                            ? const SvgRu()
-                            : const SvgUk();
+            ),
+          ],
+        ),
+        Expanded(
+          child: BlocBuilder<HomeBloc, HomeState>(
+            builder: (context, state) {
+              print('Is Loading: ${state.isLoading}');
+              print('Has Error: ${state.error != null}');
+              print('Data Length: ${state.data?.length ?? 0}');
+              print('Has Next Page: ${state.hasNextPage}');
+
+              if (state.error != null) {
+                print('=== ERROR STATE: ${state.error} ===');
+                return Text(
+                  state.error ?? '',
+                  style: Theme.of(context)
+                      .textTheme
+                      .headlineSmall
+                      ?.copyWith(color: Colors.red),
+                );
+              }
+
+              if (state.isLoading) {
+                return const Center(child: CircularProgressIndicator());
+              }
+
+              return BlocBuilder<LikeBloc, LikeState>(
+                builder: (context, likeState) {
+                  print('Liked IDs: ${likeState.likedIds}');
+                  print('Liked IDs Count: ${likeState.likedIds?.length ?? 0}');
+
+                  return RefreshIndicator(
+                    onRefresh: _onRefresh,
+                    child: ListView.builder(
+                      controller: scrollController,
+                      padding: EdgeInsets.zero,
+                      itemCount: (state.data?.length ?? 0) +
+                          (state.hasNextPage ? 1 : 0),
+                      itemBuilder: (context, index) {
+                        if (index >= (state.data?.length ?? 0)) {
+                          return const Padding(
+                            padding: EdgeInsets.all(16.0),
+                            child: Center(child: CircularProgressIndicator()),
+                          );
+                        }
+
+                        final data = state.data?[index];
+                        if (data == null) {
+                          return const SizedBox.shrink();
+                        }
+
+                        final isLiked = likeState.likedIds?.contains(data.id) == true;
+                        print('Item $index - ID: ${data.id}, Title: ${data.text}, IsLiked: $isLiked');
+
+                        return _Card.fromData(
+                          data,
+                          key: ValueKey('card_${data.id}_$index'),
+                          onLike: _onLike,
+                          isLiked: isLiked,
+                          onTap: () => _navToDetails(context, data),
+                        );
                       },
                     ),
-                  ),
-                ),
-              ),
-            ],
+                  );
+                },
+              );
+            },
           ),
-          BlocBuilder<HomeBloc, HomeState>(
-          builder: (context, state) => state.error != null
-            ? Text(
-              state.error ?? '',
-              style: Theme.of(context).textTheme.headlineSmall?.copyWith(color: Colors.red),
-            )
-          : state.isLoading
-            ? const CircularProgressIndicator()
-                : BlocBuilder<LikeBloc, LikeState>(
-                  builder: (context, likeState) {
-                    return Expanded(
-                        child: RefreshIndicator(
-                          onRefresh: _onRefresh,
-                          child: ListView.builder(
-                            controller: scrollController,
-                            padding: EdgeInsets.zero,
-                            itemCount: (state.data?.length ?? 0) + (state.hasNextPage ? 1 : 0),
-                            itemBuilder: (context, index) {
-                                  final data = state.data?.data?[index];
-                                  return data != null
-                                      ? _Card.fromData(
-                                      data,
-                                      onLike: _onLike,
-                                      isLiked: likeState.likedIds?.contains(data.id) == true,
-                                      onTap: () => _navToDetails(context, data),
-                                )
-                                    : const SizedBox.shrink();
-                            }
-                          )
-                      )
-                    );
-                  },
-                BlocBuilder<HomeBloc, HomeState>(
-                builder: (context, state) => state.isPaginationLoading
-                ? const CircularProgressIndicator()
-                    : const SizedBox.shrink(),
-                                ),
-                  ),
-                                ),
-                )
-          ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 
@@ -337,6 +366,9 @@ class _BodyState extends State<Body> {
   }
 
   void _showSnackBar(BuildContext context, String title, bool isLiked) {
+    print('Title: $title');
+    print('IsLiked: $isLiked');
+
     WidgetsBinding.instance.addPostFrameCallback((_) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -347,23 +379,29 @@ class _BodyState extends State<Body> {
             ),
           ),
           backgroundColor: Color.fromRGBO(26, 0, 137, 100),
-          duration: const Duration(milliseconds: 1500),
+          duration: const Duration(milliseconds: 2500),
         ),
       );
     });
   }
 
   void _navToDetails(BuildContext context, CardData data) {
+    print('Details ID: ${data.id}');
+    print('Details Title: ${data.text}');
+
     Navigator.push(
       context,
       CupertinoPageRoute(builder: (context) => DetailsPage(data)),
     );
   }
 
-  void _onLike(String? id, String title, bool isLiked){
+  void _onLike(String? id, String title, bool isLiked) {
+
     if (id != null) {
       context.read<LikeBloc>().add(ChangeLikeEvent(id));
       _showSnackBar(context, title, !isLiked);
+    } else {
+      print('=== ERROR: ID IS NULL ===');
     }
   }
 }

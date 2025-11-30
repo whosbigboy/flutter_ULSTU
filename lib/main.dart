@@ -28,6 +28,7 @@ class MyApp extends StatelessWidget {
         builder: (context, state){
           return MaterialApp(
             title: 'Baryshev Dima PIbd-33',
+              locale: state.currentLocale,
             localizationsDelegates: AppLocale.localizationsDelegates,
             supportedLocales: AppLocale.supportedLocales,
             debugShowCheckedModeBanner: false,
